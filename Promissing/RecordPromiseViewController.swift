@@ -18,8 +18,12 @@ class RecordPromiseViewController: UIViewController, SFSpeechRecognizerDelegate 
     
     let speechRecognizer = SFSpeechRecognizer()!
     let audioEngine = AVAudioEngine()
+    
     var recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
     var recognitionTask = SFSpeechRecognitionTask()
+    var promise: Promise?
+    
+    //let alertController = UIAlertController(title: "저장", message: <#T##String?#>, preferredStyle: <#T##UIAlertControllerStyle#>)
     
     @IBOutlet weak var contentTextView: UITextView!
     @IBOutlet weak var statusLabel: UILabel!
@@ -55,6 +59,21 @@ class RecordPromiseViewController: UIViewController, SFSpeechRecognizerDelegate 
         }
     }
     
+    func savePromise() {
+        if promise == nil {
+            promise = Promise(context: managedObjectContext)
+        }
+        
+        promise?.content = contentTextView.text
+        promise?.promisedAt = Date() as NSDate
+        
+        do {
+            try managedObjectContext.save()
+        } catch {
+            print(error.localizedDescription)
+        }
+    }
+    
     func refreshWaveView() {
         if self.waveView.amplitude <= self.waveView.idleAmplitude || self.waveView.amplitude > 1.0 {
             self.change *= -1.0
@@ -80,6 +99,7 @@ class RecordPromiseViewController: UIViewController, SFSpeechRecognizerDelegate 
             recognitionTask.cancel()
 
             statusLabel.text = "녹음 시작"
+            savePromise()
         } else {
             statusLabel.text = "녹음 중지"
             
